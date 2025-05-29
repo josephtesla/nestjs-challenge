@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from '../src/app.module';
-import { RecordFormat, RecordCategory } from '../src/api/schemas/record.enum';
+import { RecordFormat, RecordCategory } from '../src/components/records/schemas/record.enum';
 
 describe('RecordController (e2e)', () => {
   let app: INestApplication;

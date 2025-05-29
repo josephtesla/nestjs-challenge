@@ -2,9 +2,9 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { RecordController } from './record.controller';
 import { getModelToken } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { Record } from '../schemas/record.schema';
-import { CreateRecordRequestDTO } from '../dtos/create-record.request.dto';
-import { RecordCategory, RecordFormat } from '../schemas/record.enum';
+import { Record } from './schemas/record.schema';
+import { CreateRecordRequestDTO } from './dtos/create-record.request.dto';
+import { RecordCategory, RecordFormat } from './schemas/record.enum';
 
 describe('RecordController', () => {
   let recordController: RecordController;
