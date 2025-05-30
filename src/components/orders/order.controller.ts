@@ -2,7 +2,7 @@ import { Body, Controller, Get, HttpCode, HttpStatus, Post } from '@nestjs/commo
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { OrderService } from './order.service';
 import { CreateOrderRequestDTO } from './dtos/create-order.request.dto';
-import { OrderEntity, OrderResponse } from './results/order.response';
+import { OrderResponse } from './results/order.response';
 
 @ApiTags('orders')
 @Controller('orders')
@@ -16,7 +16,7 @@ export class OrderController {
   @ApiResponse({ status: 400, description: 'Bad Request - Insufficient stock' })
   @ApiResponse({ status: 404, description: 'Record not found' })
   async create(@Body() dto: CreateOrderRequestDTO) {
-    const order = (await this.orderService.create(dto)) as unknown as OrderEntity;
+    const order = await this.orderService.create(dto);
     return OrderResponse.created(order);
   }
 
@@ -24,7 +24,8 @@ export class OrderController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Get all orders' })
   @ApiResponse({ status: 200, description: 'List of all orders' })
-  findAll() {
-    return this.orderService.findAll();
+  async findAll() {
+    const data = await this.orderService.findAll();
+    return { data, message: 'Orders retrieved successfully', statusCode: HttpStatus.OK };
   }
 }

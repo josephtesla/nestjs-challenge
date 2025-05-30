@@ -16,16 +16,14 @@ import { CreateRecordRequestDTO } from './dtos/create-record.request.dto';
 import { RecordCategory, RecordFormat } from './schemas/record.enum';
 import { UpdateRecordRequestDTO } from './dtos/update-record.request.dto';
 import { RecordService } from './record.service';
-import { RecordsPaginatedResponse, RecordResponse, RecordEntity } from './results';
+import { RecordsPaginatedResponse, RecordResponse } from './results';
 import { SearchRecordQueryDTO } from './dtos/search-record.query.dto';
 import { RecordsHttpCacheInterceptor } from './interceptors/records-http-cache.interceptor';
 
 @ApiTags('records')
 @Controller('records')
 export class RecordController {
-  constructor(
-    private readonly recordService: RecordService,
-  ) {}
+  constructor(private readonly recordService: RecordService) {}
 
   @HttpCode(HttpStatus.CREATED)
   @Post()
@@ -38,7 +36,7 @@ export class RecordController {
   @ApiResponse({ status: 400, description: 'Bad Request' })
   async create(@Body() createRecordDto: CreateRecordRequestDTO): Promise<RecordResponse> {
     const record = await this.recordService.create(createRecordDto);
-    return RecordResponse.created(record.toObject());
+    return RecordResponse.created(record);
   }
 
   @Put(':id')
@@ -55,7 +53,8 @@ export class RecordController {
     @Body() updateRecordDto: UpdateRecordRequestDTO,
   ): Promise<RecordResponse> {
     const record = await this.recordService.update(id, updateRecordDto);
-    return RecordResponse.updated(record.toObject());
+
+    return RecordResponse.updated(record);
   }
 
   @CacheTTL(1000 * 30 * 60) // cache for 30 minutes
@@ -125,11 +124,11 @@ export class RecordController {
       offset: Number(offset),
     });
 
-    return new RecordsPaginatedResponse(
-      data as unknown as RecordEntity[],
-      total,
-      Number(limit),
-      Number(offset),
-    );
+    return RecordsPaginatedResponse.get({
+      data,
+      totalDocuments: total,
+      limit: Number(limit),
+      offset: Number(offset),
+    });
   }
 }

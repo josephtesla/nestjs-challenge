@@ -18,7 +18,10 @@ async function setupDatabase() {
       async (answer) => {
         rl.close();
         const data = JSON.parse(fs.readFileSync('data.json', 'utf-8'));
-        const recordModel: mongoose.Model<Record> = mongoose.model<Record>('Record', RecordSchema);
+        const recordModel: mongoose.Model<Record> = mongoose.model<Record>(
+          'Record',
+          RecordSchema,
+        );
 
         await mongoose.connect(process.env.MONGO_URL);
 

@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Model, FilterQuery, ClientSession } from 'mongoose';
-import escapeRegex from 'escape-string-regexp';
+import { escapeRegExp } from 'lodash';
 
 import { Record } from './schemas/record.schema';
 import { SearchOptions } from './types';
@@ -73,7 +73,7 @@ export class RecordRepository {
 
     // fallback path, using contains regex when $text got zero hits
     if (q && total === 0) {
-      const contains = new RegExp(escapeRegex(q), 'i');
+      const contains = new RegExp(escapeRegExp(q), 'i');
       match = this.buildMatch(opts, false);
       match.$or = [{ artist: contains }, { album: contains }, { category: contains }];
 
@@ -89,8 +89,8 @@ export class RecordRepository {
 
     if (useText && q) m.$text = { $search: q };
 
-    if (artist) m.artist = { $regex: escapeRegex(artist), $options: 'i' };
-    if (album) m.album = { $regex: escapeRegex(album), $options: 'i' };
+    if (artist) m.artist = { $regex: escapeRegExp(artist), $options: 'i' };
+    if (album) m.album = { $regex: escapeRegExp(album), $options: 'i' };
     if (format) m.format = format;
     if (category) m.category = category;
 

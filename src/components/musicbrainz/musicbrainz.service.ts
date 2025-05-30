@@ -64,7 +64,6 @@ export class MusicBrainzService {
       await this.cacheService.set(`tracklist:${mbid}`, tracks, 1000 * 60 * 60); // cache for 1 hour
       return tracks;
     } catch (err) {
-      console.error(`Failed to fetch tracklist for MBID ${mbid}:`, err);
       this.logger.warn(`Failed to fetch tracklist from MusicBrainz for ${mbid}: ${err}`);
       return [];
     }

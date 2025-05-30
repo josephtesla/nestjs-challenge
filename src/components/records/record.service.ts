@@ -21,7 +21,6 @@ export class RecordService {
   async create(dto: CreateRecordRequestDTO): Promise<Record> {
     try {
       const record = await this.recordRepository.create(dto);
-      console.log('Record created:', record);
       await this.processMbid(record, dto.mbid);
       return record;
     } catch (err: any) {
@@ -57,15 +56,10 @@ export class RecordService {
     record.mbid = mbid;
     const tracklist = await this.mbService.getTracklistFromCache(mbid);
     if (tracklist) {
-      console.log(`Tracklist found in cache for MBID ${mbid}`);
       record.tracklist = tracklist;
-      console.log(record.tracklist);
       await this.recordRepository.save(record);
-      console.log(`Tracklist updated for record ${record._id} with MBID ${mbid}`);
     } else {
-      console.log(`No cached tracklist found for MBID ${mbid}, adding job to queue`);
       await this.tracklistQueue.add(GetRecordTracklistJob, { recordId: record._id, mbid });
-      console.log(`Job added to queue for record ${record._id} with MBID ${mbid}`);
     }
   }
 }

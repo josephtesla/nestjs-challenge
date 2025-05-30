@@ -28,8 +28,4 @@ export class CacheService {
       await this.redis.del(...keys);
     }
   }
-
-  async clearAll(): Promise<void> {
-    await this.cache.clear();
-  }
 }

@@ -1,38 +1,46 @@
 import { Test } from '@nestjs/testing';
 import { HttpService } from '@nestjs/axios';
-import { MusicBrainzService } from './musicbrainz.service';
+import { MusicBrainzService } from '../musicbrainz.service';
 import { of } from 'rxjs';
 import { ConfigService } from '@nestjs/config';
-import { AppCacheModule } from 'src/common/cache';
+import { CacheService } from '../../../common/cache';
 
 describe('MusicBrainzService', () => {
+  const configMock = {
+    get: (key: string) => {
+      return key === 'musicBrainz.apiUrl' ? 'https://musicbrainz.org/ws/2' : undefined;
+    },
+  };
+
+  const cacheServiceMock = {
+    get: jest.fn(),
+    set: jest.fn(),
+  };
+
+  const httpMock = {
+    get: jest.fn(),
+  };
+
   let mbService: MusicBrainzService;
 
   beforeEach(async () => {
+    jest.clearAllMocks();
+
     const module = await Test.createTestingModule({
-      imports: [AppCacheModule],
       providers: [
         MusicBrainzService,
-        {
-          provide: ConfigService,
-          useValue: {
-            get: (key: string) =>
-              key === 'musicBrainz.apiUrl' ? 'https://musicbrainz.org/ws/2' : undefined,
-          },
-        },
-        {
-          provide: HttpService,
-          useValue: {
-            get: jest.fn().mockReturnValue(of({ data: sampleXml })), // mock xml response
-          },
-        },
+        { provide: ConfigService, useValue: configMock },
+        { provide: CacheService, useValue: cacheServiceMock },
+        { provide: HttpService, useValue: httpMock },
       ],
     }).compile();
 
     mbService = module.get(MusicBrainzService);
   });
 
-  it('Should correctly parse track titles', async () => {
+  it('Should correctly get and parse track titles', async () => {
+    httpMock.get.mockReturnValue(of({ data: sampleXml }));
+
     const testmbid = 'bbc1f8b2-3d4e-4f5a-8b6c-7d8e9f0a1b2c';
     const list = await mbService.getTracklistFromApi(testmbid);
     expect(list).toEqual([
@@ -41,6 +49,40 @@ describe('MusicBrainzService', () => {
       'Double Edge (GeRM remix)',
       'Double Edge (GeRM remix instrumental)',
     ]);
+
+    expect(cacheServiceMock.set).toHaveBeenCalledWith(`tracklist:${testmbid}`, list, 3600000);
+  });
+
+  it('Should return empty array if response has no data', async () => {
+    httpMock.get.mockReturnValue(of({ data: '' }));
+
+    const result = await mbService.getTracklistFromApi('some-mbid');
+    expect(result).toEqual([]);
+  });
+
+  it('Should return empty array if response has malformed xml or missing keys', async () => {
+    const malformedXml = `<metadata><release></release></metadata>`;
+    httpMock.get.mockReturnValue(of({ data: malformedXml }));
+
+    const result = await mbService.getTracklistFromApi('some-mbid');
+    expect(result).toEqual([]);
+  });
+
+  it('Should return empty array on API error', async () => {
+    httpMock.get.mockImplementation(() => {
+      throw new Error('API Errorr');
+    });
+    const result = await mbService.getTracklistFromApi('some-mbid');
+    expect(result).toEqual([]);
+  });
+
+  it('Should return tracklist from cache if available', async () => {
+    const mockTracklist = ['Made in Lagos', 'Love Nwantit', 'Essence'];
+    cacheServiceMock.get.mockResolvedValue(mockTracklist);
+
+    const result = await mbService.getTracklistFromCache('some-mbid');
+    expect(result).toBe(mockTracklist);
+    expect(cacheServiceMock.get).toHaveBeenCalledWith('tracklist:some-mbid');
   });
 });
 

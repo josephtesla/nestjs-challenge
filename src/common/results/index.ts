@@ -1,2 +1,1 @@
-export * from './base.result';
-export * from './base-data.result';
+export * from './base.response';

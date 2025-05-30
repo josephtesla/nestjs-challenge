@@ -1,6 +1,6 @@
 import { HttpStatus } from '@nestjs/common';
 import { ApiProperty } from '@nestjs/swagger';
-import { BaseResultWithData } from '../../../common/results';
+import { BaseResponse } from '../../../common/results';
 
 export class OrderEntity {
   @ApiProperty()
@@ -25,15 +25,19 @@ export class OrderEntity {
   updatedAt: Date;
 }
 
-export class OrderResponse extends BaseResultWithData<OrderEntity> {
+export class OrderResponse extends BaseResponse<OrderEntity> {
   @ApiProperty({ type: () => OrderEntity })
   data: OrderEntity;
 
-  constructor(status: HttpStatus, message: string, data: OrderEntity) {
-    super(status, message, data);
+  constructor(params: { statusCode: HttpStatus; message: string; data: any }) {
+    super(params);
   }
 
-  static created(data: OrderEntity) {
-    return new OrderResponse(HttpStatus.CREATED, 'Order created successfully', data);
+  static created(data: any) {
+    return new OrderResponse({
+      statusCode: HttpStatus.CREATED,
+      message: 'Order successfully created',
+      data,
+    });
   }
 }
