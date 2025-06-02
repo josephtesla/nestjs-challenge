@@ -1,4 +1,8 @@
 # Record Store Challenge API
+
+## UPDATES
+I've completed the assessment, ensuring a fully functional and performant API. Kindly review the "System Documentation - Hostelworld_GodwinJoseph.pdf" file (in the root) I've put together to get a succint overview of the major design/architectural changes and the reasoning behind the final implementation.
+
 ## Description
 
 This is a **NestJS** application starter with MongoDB integration. If necessary, it provides a script to boot a Mongo emulator for Docker. This setup includes end-to-end tests, unit tests, test coverage, linting, and database setup with data from `data.json`.
