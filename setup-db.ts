@@ -1,8 +1,10 @@
 import * as mongoose from 'mongoose';
-import { Record, RecordSchema } from './src/api/schemas/record.schema';
 import * as fs from 'fs';
-import { AppConfig } from './src/app.config';
 import * as readline from 'readline';
+import * as dotenv from 'dotenv';
+import { Record, RecordSchema } from './src/components/records/schemas/record.schema';
+
+dotenv.config();
 
 async function setupDatabase() {
   try {
@@ -15,14 +17,13 @@ async function setupDatabase() {
       'Do you want to clean up the existing records collection? (Y/N): ',
       async (answer) => {
         rl.close();
-
         const data = JSON.parse(fs.readFileSync('data.json', 'utf-8'));
         const recordModel: mongoose.Model<Record> = mongoose.model<Record>(
           'Record',
           RecordSchema,
         );
 
-        await mongoose.connect(AppConfig.mongoUrl);
+        await mongoose.connect(process.env.MONGO_URL);
 
         if (answer.toLowerCase() === 'y') {
           await recordModel.deleteMany({});
