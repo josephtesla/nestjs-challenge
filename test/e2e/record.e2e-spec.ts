@@ -81,9 +81,9 @@ describe('Records (e2e)', () => {
     expect(res.body.data[0].album).toBe('Abbey Road');
   });
 
-  it("returns result for 'contains' queries (regex fallback)", async () => {
+  it('returns result for prefix queries (regex fallback)', async () => {
     const res = await http
-      .get('/records?q=beat') // prefix that misses text index
+      .get('/records?q=the beat') // prefix that misses text index
       .expect(200);
 
     expect(res.body.data.length).toBeGreaterThan(0);

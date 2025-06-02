@@ -11,6 +11,7 @@ import {
 } from './queues/constants';
 import { TracklistQueueProcessor } from './queues/tracklist-queue.processor';
 import { RecordsUpdatedEventListener } from './events/records-updated.listener';
+import { RecordSearchIndexService } from './schemas/atlas/record-search-index.service';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { RecordsUpdatedEventListener } from './events/records-updated.listener';
   ],
   controllers: [RecordController],
   providers: [
+    RecordSearchIndexService,
     RecordService,
     RecordRepository,
     TracklistQueueProcessor,

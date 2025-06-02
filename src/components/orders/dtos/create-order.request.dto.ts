@@ -1,4 +1,3 @@
-// src/components/orders/dtos/create-order.request.dto.ts
 import { ApiProperty } from '@nestjs/swagger';
 import { IsMongoId, IsInt, Min } from 'class-validator';
 

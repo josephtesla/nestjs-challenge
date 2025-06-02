@@ -57,7 +57,7 @@ describe('Orders (e2e)', () => {
   });
 
   // listing orders not a requirement in the task,
-  // but added for testing and completeness (wihthout pagination of course)
+  // but added for testing and completeness (wihthout pagination ofcourse)
   it('lists all orders', async () => {
     const res = await http.get('/orders').expect(200);
     expect(Array.isArray(res.body.data)).toBe(true);

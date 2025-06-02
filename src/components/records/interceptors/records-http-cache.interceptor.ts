@@ -11,8 +11,7 @@ export class RecordsHttpCacheInterceptor extends CacheInterceptor {
       return undefined;
     }
 
-    // key = records:<sha256(full URL)>
     const hash = createHash('sha256').update(req.originalUrl).digest('hex');
-    return `records:${hash}`;
+    return `records:${hash}`; // key = records:<hash(full-url)>
   }
 }

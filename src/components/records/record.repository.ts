@@ -3,16 +3,42 @@ import { InjectModel } from '@nestjs/mongoose';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Model, FilterQuery, ClientSession } from 'mongoose';
 import { escapeRegExp } from 'lodash';
+import { ConfigService } from '@nestjs/config';
 
 import { Record } from './schemas/record.schema';
 import { SearchOptions } from './types';
 import { RecordsUpdatedEvent } from './events/records-updated.event';
+
+const projectionFields = [
+  {
+    $project: {
+      id: { $toString: '$_id' },
+      artist: 1,
+      album: 1,
+      price: 1,
+      qty: 1,
+      format: 1,
+      category: 1,
+      mbid: 1,
+      tracklist: 1,
+      createdAt: 1,
+      updatedAt: 1,
+    },
+  },
+  {
+    $project: {
+      _id: 0,
+      __v: 0,
+    },
+  },
+];
 
 @Injectable()
 export class RecordRepository {
   constructor(
     @InjectModel(Record.name) private readonly model: Model<Record>,
     private readonly emitter: EventEmitter2,
+    private readonly config: ConfigService,
   ) {}
 
   startSession() {
@@ -63,21 +89,105 @@ export class RecordRepository {
     return 'insufficient_stock';
   }
 
-  /** Search methods */
   async search(opts: SearchOptions) {
+    const useAtlas = this.config.get<boolean>('database.useAtlas');
+    if (useAtlas) {
+      return this.searchWithAtlas(opts);
+    } else {
+      return this.searchWithText(opts);
+    }
+  }
+
+  private async searchWithAtlas(opts: SearchOptions) {
+    const { q, artist, album, format, category, limit = 20, offset = 0 } = opts;
+
+    // using a should clause for the q search to ensure search ranking score
+    const shouldClauses = [];
+    if (q) {
+      ['artist', 'album', 'category'].forEach((path) => {
+        shouldClauses.push({
+          autocomplete: {
+            query: q,
+            path,
+            fuzzy: { maxEdits: 1 },
+          },
+        });
+      });
+    }
+
+    // 'exact' filters for format/category
+    const filterClauses = [];
+    if (format) filterClauses.push({ equals: { path: 'format', value: format } });
+    if (category) {
+      filterClauses.push({ equals: { path: 'category', value: category } });
+    }
+
+    // just like q but with filter clause so it dont contribute to ranking,
+    // filter for artist by prefix (with fuzzy) if client provided "artist"
+    // e.g ?artist="beatl" should still match "beatles" even with a typo
+    if (artist) {
+      filterClauses.push({
+        autocomplete: { query: artist, path: 'artist', fuzzy: { maxEdits: 1 } },
+      });
+    }
+
+    // same for album
+    if (album) {
+      filterClauses.push({
+        autocomplete: { query: album, path: 'album', fuzzy: { maxEdits: 1 } },
+      });
+    }
+
+    const includeSearch = shouldClauses.length > 0 || filterClauses.length > 0;
+    const pipeline: any[] = [
+      ...(includeSearch
+        ? [
+            {
+              $search: {
+                index: 'records_search_index',
+                compound: {
+                  should: shouldClauses,
+                  minimumShouldMatch: Math.min(1, shouldClauses.length),
+                  filter: filterClauses,
+                },
+              },
+            },
+          ]
+        : []),
+      { $addFields: { score: { $meta: 'searchScore' } } },
+      { $sort: q ? { score: -1, _id: -1 } : { _id: -1 } },
+      {
+        $facet: {
+          data: [{ $skip: offset }, { $limit: limit }, ...projectionFields],
+          total: [{ $count: 'count' }],
+        },
+      },
+      {
+        $project: {
+          data: 1,
+          total: { $ifNull: [{ $arrayElemAt: ['$total.count', 0] }, 0] },
+        },
+      },
+    ];
+
+    const [result] = await this.model.aggregate(pipeline).exec();
+    return { data: result.data, total: result.total };
+  }
+
+  private async searchWithText(opts: SearchOptions) {
     const { q, limit = 20, offset = 0 } = opts;
 
     // primary path using $text full-text search + other filters
     let match = this.buildMatch(opts, true);
-    let { data, total } = await this.aggregateSearch(match, limit, offset, !!q);
+    let { data, total } = await this.aggregateTextSearch(match, limit, offset, !!q);
 
-    // fallback path, using contains regex when $text got zero hits
+    // fallback, using prefix regex when $text gets zero hits
     if (q && total === 0) {
-      const contains = new RegExp(escapeRegExp(q), 'i');
+      const prefix = new RegExp('^' + escapeRegExp(q), 'i');
       match = this.buildMatch(opts, false);
-      match.$or = [{ artist: contains }, { album: contains }, { category: contains }];
+      match.$or = [{ artist: prefix }, { album: prefix }, { category: prefix }];
 
-      ({ data, total } = await this.aggregateSearch(match, limit, offset, false));
+      ({ data, total } = await this.aggregateTextSearch(match, limit, offset, false));
     }
 
     return { data, total };
@@ -89,15 +199,15 @@ export class RecordRepository {
 
     if (useText && q) m.$text = { $search: q };
 
-    if (artist) m.artist = { $regex: escapeRegExp(artist), $options: 'i' };
-    if (album) m.album = { $regex: escapeRegExp(album), $options: 'i' };
+    if (artist) m.artist = { $regex: '^' + escapeRegExp(artist), $options: 'i' };
+    if (album) m.album = { $regex: '^' + escapeRegExp(album), $options: 'i' };
     if (format) m.format = format;
     if (category) m.category = category;
 
     return m;
   }
 
-  private async aggregateSearch(
+  private async aggregateTextSearch(
     match: FilterQuery<Record>,
     limit: number,
     offset: number,
@@ -109,31 +219,7 @@ export class RecordRepository {
       { $sort: useTextScore ? { score: -1 } : { _id: -1 } },
       {
         $facet: {
-          data: [
-            { $skip: offset },
-            { $limit: limit },
-            {
-              $project: {
-                id: { $toString: '$_id' },
-                artist: 1,
-                album: 1,
-                price: 1,
-                qty: 1,
-                format: 1,
-                category: 1,
-                mbid: 1,
-                tracklist: 1,
-                createdAt: 1,
-                updatedAt: 1,
-              },
-            },
-            {
-              $project: {
-                _id: 0,
-                __v: 0,
-              },
-            },
-          ],
+          data: [{ $skip: offset }, { $limit: limit }, ...projectionFields],
           total: [{ $count: 'count' }],
         },
       },

@@ -50,11 +50,43 @@ export class Record extends Document {
 
 export const RecordSchema = SchemaFactory.createForClass(Record);
 
-RecordSchema.index({ format: 1 });
+/**
+ * artist, album, format
+ * artist,album
+ * artist
+ */
+RecordSchema.index({ artist: 1, album: 1, format: 1 }, { unique: true });
+
+/**
+ * album, format,
+ * album
+ */
+RecordSchema.index({ album: 1, format: 1 });
+
+/**
+ * artist,format,
+ * artist
+ */
+RecordSchema.index({ artist: 1, format: 1 });
+
+/**
+ * category, format,
+ * category
+ */
 RecordSchema.index({ category: 1, format: 1 });
 
-// unique across artist, album, format
-RecordSchema.index({ artist: 1, album: 1, format: 1 }, { unique: true });
+/**
+ * artist, album, category, format
+ * artist, album, category
+ * artist, album
+ * artist
+ */
+RecordSchema.index({ artist: 1, album: 1, category: 1, format: 1 });
+
+/**
+ * format
+ */
+RecordSchema.index({ format: 1 });
 
 // text search across fields
 RecordSchema.index({

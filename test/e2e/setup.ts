@@ -24,6 +24,7 @@ const cacheServiceMock = {
 export async function bootstrapE2E() {
   mongo = await MongoMemoryReplSet.create({ replSet: { count: 1 } });
   process.env.MONGO_URL = mongo.getUri();
+  process.env.MONGO_USE_ATLAS = 'false';
 
   const moduleFixture = await Test.createTestingModule({
     imports: [AppModule],

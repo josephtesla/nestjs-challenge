@@ -57,7 +57,7 @@ export class RecordController {
     return RecordResponse.updated(record);
   }
 
-  @CacheTTL(1000 * 30 * 60) // cache for 30 minutes
+  @CacheTTL(1000 * 15 * 60) // cache for 15 minutes
   @UseInterceptors(RecordsHttpCacheInterceptor)
   @Get()
   @ApiOperation({ summary: 'Get all records with optional filters' })
