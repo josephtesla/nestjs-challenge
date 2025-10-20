@@ -76,7 +76,7 @@ export class RecordService {
         const record = await this.recordRepository.create(recordData);
         records.push(record);
       } catch (err: any) {
-        // Skip duplicate records (unique constraint on artist, album, format)
+        // ignore duplicate records error (like unique constraint on artist, album, format)
         if (err?.code === 11000) {
           continue;
         }
