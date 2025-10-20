@@ -13,6 +13,7 @@ import {
 import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CacheTTL } from '@nestjs/cache-manager';
 import { CreateRecordRequestDTO } from './dtos/create-record.request.dto';
+import { PopulateRecordsRequestDTO } from './dtos/populate-records.request.dto';
 import { RecordCategory, RecordFormat } from './schemas/record.enum';
 import { UpdateRecordRequestDTO } from './dtos/update-record.request.dto';
 import { RecordService } from './record.service';
@@ -130,5 +131,17 @@ export class RecordController {
       limit: Number(limit),
       offset: Number(offset),
     });
+  }
+
+  @HttpCode(HttpStatus.CREATED)
+  @Post('populate')
+  @ApiOperation({ summary: 'Generate fake records data for testing' })
+  @ApiResponse({
+    status: 201,
+    description: 'Records successfully generated',
+  })
+  @ApiResponse({ status: 400, description: 'Bad Request' })
+  async populateRecords(@Body() populateDto: PopulateRecordsRequestDTO): Promise<{ count: number; records: any[] }> {
+    return this.recordService.populateRecords(populateDto);
   }
 }
