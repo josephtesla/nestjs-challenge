@@ -1,6 +1,11 @@
 # Record Store Challenge API
 
 ## UPDATES
+
+#### 2025-10-20
+Added endpoint to populate database with records data for in-depth testing purposes.
+
+#### 2025-06-02
 I've completed the assessment, ensuring a fully functional and performant API. Kindly review the "System Documentation - Hostelworld_GodwinJoseph.pdf" file (in the root) I've put together to get a succint overview of the major design/architectural changes and the reasoning behind the final implementation.
 
 ## Description
@@ -106,4 +111,3 @@ To check if your code passes ESLint checks:
 npm run lint
 ```
 This command will show you any linting issues with your code.
-
