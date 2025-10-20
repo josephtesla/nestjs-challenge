@@ -141,7 +141,9 @@ export class RecordController {
     description: 'Records successfully generated',
   })
   @ApiResponse({ status: 400, description: 'Bad Request' })
-  async populateRecords(@Body() populateDto: PopulateRecordsRequestDTO): Promise<{ count: number; records: any[] }> {
+  async populateRecords(
+    @Body() populateDto: PopulateRecordsRequestDTO,
+  ): Promise<{ count: number; records: any[] }> {
     return this.recordService.populateRecords(populateDto);
   }
 }

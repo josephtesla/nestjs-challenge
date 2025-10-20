@@ -9,6 +9,7 @@
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "infra:start": "docker compose -f ./docker-compose-infra.yml up -d",
+    "infra:stop": "docker compose -f ./docker-compose-infra.yml down",
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",

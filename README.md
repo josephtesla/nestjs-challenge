@@ -20,21 +20,32 @@ This is a **NestJS** application starter with MongoDB integration. If necessary,
 $ npm install
 ````
 
-### Docker for MongoDB Emulator
-To use the MongoDB Emulator, you can start it using Docker:
+### Start Local Infra (MongoDB + Redis)
+This project uses a single docker compose file to run the local infrastructure (MongoDB + Redis) required by the API, including the cache service.
+
 ```
-npm run mongo:start
+npm run infra:start
 ```
-This will start a MongoDB instance running on your local machine. You can customize the settings in the Docker setup by modifying the docker-compose-mongo.yml if necessary. In the current configuration, you will have a MongoDB container running, which is accessible at localhost:27017.
-This mongo url will be necessary on the .env file, with example as follows:
+
+This boots:
+- MongoDB (replica set enabled) on `localhost:27017`
+- Redis on `localhost:6379`
+
+You can configure your `.env` file as follows (defaults are already handled by the app config):
 
 ```
 MONGO_URL=mongodb://localhost:27017/records
+REDIS_URL=redis://localhost:6379
 ```
-This will point your application to a local MongoDB instance.
+
+To stop the infrastructure when you're done:
+
+```
+npm run infra:down
+```
 
 ### MongoDB Data Setup
-The data.json file contains example records to seed your database. The setup script will import the records from this file into MongoDB.
+The `data.json` file contains example records to seed your database. The setup script will import the records from this file into MongoDB. Ensure the local infra (above) is running and `MONGO_URL` points to `localhost:27017` before running the script.
 
 To set up the database with the example records:
 

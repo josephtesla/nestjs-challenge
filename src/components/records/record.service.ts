@@ -53,7 +53,9 @@ export class RecordService {
     return this.recordRepository.search(opts);
   }
 
-  async populateRecords(dto: PopulateRecordsRequestDTO): Promise<{ count: number; records: Record[] }> {
+  async populateRecords(
+    dto: PopulateRecordsRequestDTO,
+  ): Promise<{ count: number; records: Record[] }> {
     const { count } = dto;
     const records: Record[] = [];
 
@@ -67,8 +69,8 @@ export class RecordService {
         format: faker.helpers.enumValue(RecordFormat),
         category: faker.helpers.enumValue(RecordCategory),
         mbid: faker.string.uuid(),
-        tracklist: Array.from({ length: faker.number.int({ min: 5, max: 15 }) }, () => 
-          faker.music.songName()
+        tracklist: Array.from({ length: faker.number.int({ min: 5, max: 15 }) }, () =>
+          faker.music.songName(),
         ),
       };
 
